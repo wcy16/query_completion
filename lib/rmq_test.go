@@ -24,24 +24,6 @@ func TestRMQ_Top1(t *testing.T) {
 	}
 }
 
-// helper to compare
-// s1: index of topk scores
-// s2: topk scores
-func compareSlices(s1, s2, scores []int) bool {
-	l1 := len(s1)
-	l2 := len(s2)
-	if l1 > l2 {
-		return false
-	}
-
-	for i := 0; i != l1; i++ {
-		if !(scores[s1[i]] == s2[i]) {
-			return false
-		}
-	}
-	return true
-}
-
 func TestRMQ_TopK(t *testing.T) {
 	const n = 100
 	const maxTopK = 50
@@ -70,4 +52,66 @@ func TestRMQ_TopK(t *testing.T) {
 			}
 		}
 	}
+}
+
+// 6332 ns/op
+func BenchmarkRMQ_TopK(b *testing.B) {
+	queries := 1000000
+	topk := 10
+	// initialize
+	scores := rand.Perm(queries)
+	r := CreateRMQ(scores)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		begin := rand.Intn(queries)
+		end := rand.Intn(queries)
+		if begin < end {
+			r.TopK(begin, end, topk)
+		} else if begin > end {
+			r.TopK(end, begin, topk)
+		} else {
+			r.TopK(begin, end+1, topk)
+		}
+	}
+}
+
+// 381600148800 ns/op
+func BenchmarkCreateRMQ(b *testing.B) {
+	queries := 1000000
+	// initialize
+	scores := generateScores(queries)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		CreateRMQ(scores)
+	}
+}
+
+// helper to compare
+// s1: index of topk scores
+// s2: topk scores
+func compareSlices(s1, s2, scores []int) bool {
+	l1 := len(s1)
+	l2 := len(s2)
+	if l1 > l2 {
+		return false
+	}
+
+	for i := 0; i != l1; i++ {
+		if !(scores[s1[i]] == s2[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func generateScores(length int) []int {
+	scores := make([]int, length)
+
+	for i := 0; i != length; i++ {
+		scores[i] = rand.Int()
+	}
+
+	return scores
 }
