@@ -76,6 +76,30 @@ func BenchmarkRMQ_TopK(b *testing.B) {
 	}
 }
 
+// 84526906 ns/op
+func BenchmarkBaseline(b *testing.B) {
+	queries := 1000000
+	//topk := 10
+	// initialize
+	scores := rand.Perm(queries)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		begin := rand.Intn(queries)
+		end := rand.Intn(queries)
+		if begin > end {
+			begin, end = end, begin
+		} else if begin == end {
+			end++
+		}
+
+		c := make([]int, end-begin)
+		copy(c, scores[begin:end])
+		sort.Ints(c)
+
+	}
+}
+
 // 381600148800 ns/op
 func BenchmarkCreateRMQ(b *testing.B) {
 	queries := 1000000
