@@ -1,8 +1,15 @@
 package lib
 
+import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"os"
+)
+
 type RMQ struct {
-	data  []int   // data
-	index [][]int // store range max index
+	Data  []int   // data
+	Index [][]int // store range max index
 }
 
 // max of a range of positive scores
@@ -23,7 +30,7 @@ func max(scores []int, begin int, end int) (int, int) {
 func CreateRMQ(scores []int) *RMQ {
 	r := new(RMQ)
 	l := len(scores)
-	r.index = make([][]int, 0, l)
+	r.Index = make([][]int, 0, l)
 
 	// not a very efficient one, maybe can cache and reuse some values
 	for i := 0; i != l; i++ {
@@ -38,11 +45,36 @@ func CreateRMQ(scores []int) *RMQ {
 			pos = i + gap
 		}
 
-		r.index = append(r.index, tmp)
+		r.Index = append(r.Index, tmp)
 	}
 
-	r.data = scores
+	r.Data = scores
 	return r
+}
+
+// save the rmq data to file
+func (r *RMQ) Save(path string) {
+	if data, err := json.Marshal(r); err == nil {
+		if fp, err := os.Create(path); err == nil {
+			_, _ = fp.Write(data)
+		} else {
+			log.Println(err)
+		}
+	} else {
+		log.Println(err)
+	}
+}
+
+// load the rmq
+func (r *RMQ) Load(path string) {
+	if data, err := ioutil.ReadFile(path); err == nil {
+		err = json.Unmarshal(data, r)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Fatal(err)
+	}
 }
 
 // return top 1 index from begin (inclusive) to end (exclusive)
@@ -59,14 +91,14 @@ func (r *RMQ) Top1(begin int, end int) int {
 	}
 
 	if begin+gap == end {
-		return r.index[begin][counter]
+		return r.Index[begin][counter]
 	} else {
 		counter--
 		gap = gap >> 1
-		id1 := r.index[begin][counter]
-		id2 := r.index[end-gap][counter]
-		m1 := r.data[id1]
-		m2 := r.data[id2]
+		id1 := r.Index[begin][counter]
+		id2 := r.Index[end-gap][counter]
+		m1 := r.Data[id1]
+		m2 := r.Data[id2]
 		if m1 < m2 {
 			return id2
 		} else {
@@ -97,7 +129,7 @@ func (r *RMQ) TopK(begin int, end int, k int) []int {
 		end,
 		id,
 	}
-	buf[initialRange] = r.data[id]
+	buf[initialRange] = r.Data[id]
 
 	// begin iteration
 	var split indexRange
@@ -116,12 +148,12 @@ func (r *RMQ) TopK(begin int, end int, k int) []int {
 		if split.begin < split.maxIndex {
 			id1 := r.Top1(split.begin, split.maxIndex)
 			r1 := indexRange{split.begin, split.maxIndex, id1}
-			buf[r1] = r.data[id1]
+			buf[r1] = r.Data[id1]
 		}
 		if tmp := split.maxIndex + 1; tmp < split.end {
 			id2 := r.Top1(tmp, split.end)
 			r2 := indexRange{tmp, split.end, id2}
-			buf[r2] = r.data[id2]
+			buf[r2] = r.Data[id2]
 		}
 		delete(buf, split)
 
