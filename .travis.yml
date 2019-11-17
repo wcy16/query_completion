@@ -7,3 +7,4 @@ install: skip
 
 script:
 - go build main.go
+- go test -v ./...
