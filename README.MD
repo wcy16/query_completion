@@ -1,5 +1,7 @@
 # Query Completion using Trie and Range Maximum Queries
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/wcy16/query_completion)](https://goreportcard.com/report/github.com/wcy16/query_completion) [![Build Status](https://travis-ci.org/wcy16/query_completion.svg?branch=master)](https://travis-ci.org/wcy16/query_completion) 
+
 ## Usage
 
 1. put data under data/queries.csv
