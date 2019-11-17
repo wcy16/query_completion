@@ -6,4 +6,4 @@ go:
 install: skip
 
 script:
-- go build
+- go build main.go
